@@ -59,6 +59,26 @@ import SelectItem from "./components/SelectItem";
 import SelectCapColor from "./components/SelectCapColor";
 import SelectShirtColor from "./components/SelectShirtColor";
 import AddOnPatches from "./components/AddOnPatches";
+import OtherPatch from "./components/OtherPatch";
+import OtherPatch2 from "./components/OtherPatch2";
+import OtherPatch3 from "./components/OtherPatch3";
+import OtherPatch4 from "./components/OtherPatch4";
+import OtherPatch5 from "./components/OtherPatch5";
+import OtherPatch6 from "./components/OtherPatch6";
+import OtherPatch7 from "./components/OtherPatch7";
+import OtherPatch8 from "./components/OtherPatch8";
+import OtherPatch9 from "./components/OtherPatch9";
+import OtherPatch10 from "./components/OtherPatch10";
+import OtherPatch11 from "./components/OtherPatch11";
+import OtherPatch12 from "./components/OtherPatch12";
+import OtherPatch13 from "./components/OtherPatch13";
+import OtherPatch14 from "./components/OtherPatch14";
+import OtherPatch15 from "./components/OtherPatch15";
+import OtherPatch16 from "./components/OtherPatch16";
+import OtherPatch17 from "./components/OtherPatch17";
+import OtherPatch18 from "./components/OtherPatch18";
+import OtherPatch19 from "./components/OtherPatch19";
+import OtherPatch20 from "./components/OtherPatch20";
 import "./App.css";
 
 function App() {
@@ -157,6 +177,26 @@ function App() {
                 element={<SelectShirtColor />}
               />
               <Route path="/add-on-patches" element={<AddOnPatches />} />
+              <Route path="/other-patch" element={<OtherPatch />} />
+              <Route path="/other-patch-2" element={<OtherPatch2 />} />
+              <Route path="/other-patch-3" element={<OtherPatch3 />} />
+              <Route path="/other-patch-4" element={<OtherPatch4 />} />
+              <Route path="/other-patch-5" element={<OtherPatch5 />} />
+              <Route path="/other-patch-6" element={<OtherPatch6 />} />
+              <Route path="/other-patch-7" element={<OtherPatch7 />} />
+              <Route path="/other-patch-8" element={<OtherPatch8 />} />
+              <Route path="/other-patch-9" element={<OtherPatch9 />} />
+              <Route path="/other-patch-10" element={<OtherPatch10 />} />
+              <Route path="/other-patch-11" element={<OtherPatch11 />} />
+              <Route path="/other-patch-12" element={<OtherPatch12 />} />
+              <Route path="/other-patch-13" element={<OtherPatch13 />} />
+              <Route path="/other-patch-14" element={<OtherPatch14 />} />
+              <Route path="/other-patch-15" element={<OtherPatch15 />} />
+              <Route path="/other-patch-16" element={<OtherPatch16 />} />
+              <Route path="/other-patch-17" element={<OtherPatch17 />} />
+              <Route path="/other-patch-18" element={<OtherPatch18 />} />
+              <Route path="/other-patch-19" element={<OtherPatch19 />} />
+              <Route path="/other-patch-20" element={<OtherPatch20 />} />
             </Routes>
           </div>
         </Router>

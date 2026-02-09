@@ -41,9 +41,7 @@ const PersonalityResult: React.FC = () => {
 
   const handleGetOtherPatch = () => {
     setHasSelectedAction(true);
-    // navigate("/other-patch");
-    //navigate("/get-other-patch");
-    navigate("/coming-soon");
+    navigate("/other-patch");
   };
 
   return (

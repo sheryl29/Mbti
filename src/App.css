@@ -4959,7 +4959,7 @@ body {
   right: -30px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 5;
+  z-index: 12;
   pointer-events: none;
 }
 
@@ -4977,7 +4977,7 @@ body {
     right: -60px;
     top: 40px;
     transform: translateY(-50%);
-    z-index: 5;
+    z-index: 12;
     pointer-events: none;
   }
 

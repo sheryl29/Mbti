@@ -58,6 +58,8 @@ import ComingSoon from "./components/ComingSoon";
 import SelectItem from "./components/SelectItem";
 import SelectCapColor from "./components/SelectCapColor";
 import SelectShirtColor from "./components/SelectShirtColor";
+import SelectPassportColor from "./components/SelectPassportColor";
+import SelectLanyardColor from "./components/SelectLanyardColor";
 import AddOnPatches from "./components/AddOnPatches";
 import OtherPatch from "./components/OtherPatch";
 import OtherPatch2 from "./components/OtherPatch2";
@@ -79,6 +81,7 @@ import OtherPatch17 from "./components/OtherPatch17";
 import OtherPatch18 from "./components/OtherPatch18";
 import OtherPatch19 from "./components/OtherPatch19";
 import OtherPatch20 from "./components/OtherPatch20";
+import OtherPatchResult from "./components/OtherPatchResult";
 import "./App.css";
 
 function App() {
@@ -176,6 +179,14 @@ function App() {
                 path="/select-shirt-color"
                 element={<SelectShirtColor />}
               />
+              <Route
+                path="/select-passport-color"
+                element={<SelectPassportColor />}
+              />
+              <Route
+                path="/select-lanyard-color"
+                element={<SelectLanyardColor />}
+              />
               <Route path="/add-on-patches" element={<AddOnPatches />} />
               <Route path="/other-patch" element={<OtherPatch />} />
               <Route path="/other-patch-2" element={<OtherPatch2 />} />
@@ -197,6 +208,7 @@ function App() {
               <Route path="/other-patch-18" element={<OtherPatch18 />} />
               <Route path="/other-patch-19" element={<OtherPatch19 />} />
               <Route path="/other-patch-20" element={<OtherPatch20 />} />
+              <Route path="/other-patch-result" element={<OtherPatchResult />} />
             </Routes>
           </div>
         </Router>

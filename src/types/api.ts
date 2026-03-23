@@ -20,7 +20,12 @@ export interface CompleteOrderData {
   orderSummary: string; // Formatted summary like "T-shirt Black S-M Sleeve Left + Cap Black"
   paymentImage: File;
   selectedPatches?: Array<{ patchId: string; quantity: number }>; // Selected patches with quantities
-  selectedHat?: { type: "cap" | "shirt"; color?: string; hatType?: "hat" | "bucket_hat"; price?: number }; // Cap data if selected (type can be cap or shirt for compatibility)
+  selectedHat?: {
+    type: "cap" | "shirt" | "passport_case" | "lanyard";
+    color?: string;
+    hatType?: "hat" | "bucket_hat";
+    price?: number;
+  }; // Item data for compatibility (bundle mode expects cap)
 }
 
 export interface OrderResult {

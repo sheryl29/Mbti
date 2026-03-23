@@ -85,8 +85,8 @@ const MBTIInput: React.FC = () => {
     <div className="mbti-input-page">
       {/* Main title */}
       <div className="mbti-input-title">
-        <div className="mbti-input-title-line">WHAT IS</div>
-        <div className="mbti-input-title-line">YOUR MBTI?</div>
+        <div className="mbti-input-title-line">WHAT TYPE OF</div>
+        <div className="mbti-input-title-line">PERSON ARE YOU?</div>
       </div>
 
       {/* Input field */}

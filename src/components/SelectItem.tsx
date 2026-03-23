@@ -1,43 +1,53 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFlow } from "../contexts/FlowContext";
+import type { SelectedItem } from "../types";
+
+type ItemKey = "shirt" | "cap" | "passport" | "lanyard";
 
 const SelectItem: React.FC = () => {
   const navigate = useNavigate();
   const { updateUserData } = useFlow();
-  const [selectedShirt, setSelectedShirt] = useState<boolean>(false);
-  const [selectedCap, setSelectedCap] = useState<boolean>(false);
 
-  const handleShirtClick = () => {
-    setSelectedShirt(!selectedShirt);
-  };
+  const [selected, setSelected] = useState<Record<ItemKey, boolean>>({
+    shirt: false,
+    cap: false,
+    passport: false,
+    lanyard: false,
+  });
 
-  const handleCapClick = () => {
-    setSelectedCap(!selectedCap);
+  const anySelected = useMemo(
+    () => Object.values(selected).some(Boolean),
+    [selected]
+  );
+
+  const toggle = (key: ItemKey) => {
+    setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleNext = () => {
-    if (!selectedShirt && !selectedCap) {
-      return; // At least one must be selected
-    }
+    if (!anySelected) return;
 
-    const isBundle = selectedShirt && selectedCap;
+    const selectedItems: SelectedItem[] = [];
+    if (selected.shirt) selectedItems.push({ type: "shirt" });
+    if (selected.cap) selectedItems.push({ type: "cap" });
+    if (selected.passport) selectedItems.push({ type: "passport_case" });
+    if (selected.lanyard) selectedItems.push({ type: "lanyard" });
 
-    // Store selection mode
+    // Keep old shirt+cap bundle discount behavior.
+    const isBundle = selected.shirt && selected.cap;
+
     updateUserData({
-      isBundle: isBundle,
+      selectedItems,
+      isBundle,
     });
 
-    if (isBundle) {
-      // Bundle: Start with shirt
-      navigate("/select-shirt-color");
-    } else if (selectedShirt) {
-      // Only shirt
-      navigate("/select-shirt-color");
-    } else if (selectedCap) {
-      // Only cap
-      navigate("/select-cap-color");
-    }
+    // Start the wizard with the first selected item (by priority).
+    if (selected.shirt) navigate("/select-shirt-color");
+    else if (selected.cap) navigate("/select-cap-color");
+    else if (selected.passport) navigate("/select-passport-color");
+    else if (selected.lanyard) navigate("/select-lanyard-color");
+    else navigate("/add-on-patches");
   };
 
   const handleBack = () => {
@@ -51,73 +61,90 @@ const SelectItem: React.FC = () => {
     "/4-removebg-preview.png",
   ];
 
-  const caps = [
-    "/5-removebg-preview.png",
-    "/6-removebg-preview.png",
-    "/7-removebg-preview.png",
-  ];
+  const caps = ["/cap1.png", "/cap2.png", "/cap3.png", "/cap4.png"];
+
+  const passports = ["/passport.png"];
+
+  const lanyards = ["/landyard1.png", "/landyard2.png"];
+
+  const items = useMemo(
+    () => [
+      {
+        key: "shirt" as const,
+        label: "SHIRT",
+        images: shirts,
+        gridClass: "shirt-grid",
+        price: "129K-139K",
+        isSelected: selected.shirt,
+      },
+      {
+        key: "cap" as const,
+        label: "CAP",
+        images: caps,
+        gridClass: "cap-grid",
+        price: "87K",
+        isSelected: selected.cap,
+      },
+      {
+        key: "passport" as const,
+        label: "PASSPORT CASE",
+        images: passports,
+        gridClass: "passport-grid",
+        price: "99K",
+        isSelected: selected.passport,
+      },
+      {
+        key: "lanyard" as const,
+        label: "CARD HOLDER & LANYARD",
+        images: lanyards,
+        gridClass: "lanyard-grid",
+        price: "75K",
+        isSelected: selected.lanyard,
+      },
+    ],
+    [caps, lanyards, passports, selected.cap, selected.lanyard, selected.passport, selected.shirt, shirts]
+  );
 
   return (
     <div className="select-item-page">
-      {/* Shirt Section */}
-      <div className="select-item-card select-item-card-shirt">
-        <button className="select-item-back-button" onClick={handleBack}>
-          ×
-        </button>
-        <button
-          className={`select-item-category-button ${
-            selectedShirt ? "selected" : ""
-          }`}
-          onClick={handleShirtClick}
-        >
-          SHIRT
-        </button>
-        <div className="select-item-products shirt-grid">
-          {shirts.map((shirt, index) => (
-            <div key={index} className="select-item-product">
-              <img src={shirt} alt={`Shirt ${index + 1}`} />
-            </div>
-          ))}
-        </div>
-        <div className="select-item-price">129K-139K</div>
-      </div>
-
-      {/* Instruction Text */}
-      <div className="select-item-instruction">
-        <div className="select-item-instruction-line">PICK YOUR</div>
-        <div className="select-item-instruction-line">ITEM</div>
-      </div>
-
-      {/* Note */}
-      <div className="select-item-note">
-        You can select both items for a bundle discount!
-      </div>
-
-      {/* Cap Section */}
-      <div className="select-item-card select-item-card-cap">
-        <div className="select-item-price cap-price">75K-80k</div>
-        <div className="select-item-products cap-grid">
-          {caps.map((cap, index) => (
-            <div key={index} className="select-item-product cap-product">
-              <img src={cap} alt={`Cap ${index + 1}`} />
-            </div>
-          ))}
-        </div>
-      </div>
-      <button
-        className={`select-item-category-button select-item-category-button-cap ${
-          selectedCap ? "selected" : ""
-        }`}
-        onClick={handleCapClick}
-      >
-        CAP
+      <button className="select-item-back-button" onClick={handleBack}>
+        ×
       </button>
 
-      {/* Next Button */}
+      <div className="select-item-title">PICK YOUR ITEM</div>
+
+      <div className="select-item-grid">
+        {items.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={`select-item-tile ${item.isSelected ? "selected" : ""}`}
+            onClick={() => toggle(item.key)}
+          >
+            <div className="select-item-tile-label">{item.label}</div>
+
+            <div className={`select-item-products ${item.gridClass}`}>
+              {item.images.map((src, index) => (
+                <div
+                  key={`${src ?? "placeholder"}-${index}`}
+                  className={`select-item-product ${
+                    src ? "select-item-product-real" : "select-item-product-placeholder"
+                  }`}
+                >
+                  {src ? <img src={src} alt={item.label} /> : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="select-item-tile-price">{item.price}</div>
+          </button>
+        ))}
+      </div>
+
       <button
         className="page20-next-button"
         onClick={handleNext}
-        disabled={!selectedShirt && !selectedCap}
+        disabled={!anySelected}
       >
         NEXT
       </button>

@@ -10,6 +10,8 @@ export interface UserData {
   paymentInfo?: PaymentInfo;
   appointmentDate?: string;
   selectedOtherPatches?: string[];
+  // Supports selecting multiple products (shirt/cap/passport case/lanyard).
+  selectedItems?: SelectedItem[];
   selectedItem?: SelectedItem; // For shirt (or cap if only cap selected)
   selectedHat?: SelectedItem; // For cap (only used in bundle mode)
   isBundle?: boolean; // True if user selected both shirt and cap
@@ -18,7 +20,7 @@ export interface UserData {
 }
 
 export interface SelectedItem {
-  type: "shirt" | "cap";
+  type: "shirt" | "cap" | "passport_case" | "lanyard";
   index?: number;
   color?: string;
   size?: string;

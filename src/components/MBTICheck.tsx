@@ -29,7 +29,7 @@ const MBTICheck: React.FC = () => {
         <div className="mbti-check-text">
           <div className="mbti-check-line">DO YOU</div>
           <div className="mbti-check-line">KNOW YOUR</div>
-          <div className="mbti-check-line">MBTI?</div>
+          <div className="mbti-check-line">PERSONALITY?</div>
         </div>
 
         {/* Character left of "KNOW" */}

@@ -60,6 +60,7 @@ export class ApiService {
         orderSummary: orderData.orderSummary,
         paymentImage: imageBase64,
         selectedPatches: orderData.selectedPatches || [],
+        selectedItems: orderData.selectedItems || [],
         selectedHat: orderData.selectedHat, // Include hat data
       };
 

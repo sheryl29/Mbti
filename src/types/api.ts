@@ -26,6 +26,13 @@ export interface CompleteOrderData {
     hatType?: "hat" | "bucket_hat";
     price?: number;
   }; // Item data for compatibility (bundle mode expects cap)
+  selectedItems?: Array<{
+    type: "shirt" | "cap" | "passport_case" | "lanyard";
+    color?: string;
+    size?: string;
+    hatType?: "hat" | "bucket_hat";
+    price?: number;
+  }>;
 }
 
 export interface OrderResult {

@@ -334,6 +334,7 @@ const Payment: React.FC = () => {
           orderSummary: orderSummary,
           paymentImage: uploadedImage,
           selectedPatches: userData.selectedPatches || [],
+          selectedItems,
           selectedHat: capItem
             ? {
                 type: "cap",

@@ -85,7 +85,8 @@ export default async function handler(req, res) {
       orderSummary,
       paymentImage,
       selectedPatches,
-      selectedHat // Hat data for bundle orders
+      selectedHat, // Hat data for bundle orders
+      selectedItems,
     } = req.body;
 
     // Validate required fields
@@ -136,44 +137,71 @@ export default async function handler(req, res) {
     const spreadsheetId = process.env.GOOGLE_SHEETS_ID || "1Zvq4LzomnEwRCS_qOyMPGhzeKglHTXAWwmdJoFdNzqg";
     console.log("Spreadsheet ID:", spreadsheetId);
 
-    // Format selected patches as readable string (e.g., "num_1:2, laptop:1, flower_bouquet:3")
-    let patchesString = "";
-    if (selectedPatches && Array.isArray(selectedPatches) && selectedPatches.length > 0) {
-      patchesString = selectedPatches
-        .map((patch) => `${patch.patchId}:${patch.quantity}`)
-        .join(", ");
-    }
+    const normalizedItemType = (itemType || "").toLowerCase();
+    const normalizedSummary = (orderSummary || "").toLowerCase();
 
-    // Extract hat information for bundle orders
-    const hatType = selectedHat?.hatType || ""; // "hat" or "bucket_hat"
-    const hatColor = selectedHat?.color || ""; // Hat color
+    const hasShirt =
+      normalizedItemType.includes("shirt") || normalizedSummary.includes("shirt");
+    const hasCap =
+      normalizedItemType.includes("cap") || normalizedSummary.includes("cap");
+    const hasPassport = normalizedSummary.includes("passport");
+    const hasLanyard = normalizedSummary.includes("lanyard");
+
+    const shirtTypeColor = hasShirt
+      ? `${itemType || "shirt"}${color ? ` / ${color}` : ""}`
+      : "";
+    const capColor = hasCap
+      ? selectedHat?.color || (normalizedItemType.includes("cap") ? color || "" : "")
+      : "";
+    const lanyardItem = Array.isArray(selectedItems)
+      ? selectedItems.find((item) => item?.type === "lanyard")
+      : undefined;
+    const summaryLanyardMatch = (orderSummary || "").match(
+      /CARD HOLDER\s*&\s*LANYARD\s+([A-Za-z]+)/i
+    );
+    const lanyardColor =
+      lanyardItem?.color ||
+      (selectedHat?.type === "lanyard" ? selectedHat.color || "" : "") ||
+      summaryLanyardMatch?.[1]?.toLowerCase() ||
+      "";
+
+    const patchesString =
+      selectedPatches && Array.isArray(selectedPatches) && selectedPatches.length > 0
+        ? selectedPatches.map((patch) => `${patch.patchId}:${patch.quantity}`).join(", ")
+        : "";
 
     // Prepare complete order data for Google Sheets
-    // Columns: Timestamp, Name, Phone, Address, Personality Type, Item Type, Color, Size, Template, Position, Hat Type, Hat Color, Selected Patches, Order Summary, Price, Payment Image URL
+    // Columns (A:S): time, name, phone num, adress/Pickup, personality type,
+    // shirt, shirt type/color, size, template, position, cap, cap color,
+    // passport, landyard, landyard color, patches, order summary, price, payment url
     const values = [
       [
-        new Date().toISOString(), // Timestamp
-        name || "", // Name
-        phone || "", // Phone
-        address || "", // Address
-        personalityType || "", // Personality Type
-        itemType || "", // Item Type
-        color || "", // Color
-        size || "", // Size
-        template || "", // Template
-        position || "", // Position
-        hatType || "", // Hat Type (empty if not bundle)
-        hatColor || "", // Hat Color (empty if not bundle)
-        patchesString || "", // Selected Patches
-        orderSummary || "", // Order Summary
-        price || 0, // Price
-        cloudinaryResponse.secure_url || "", // Payment Image URL
+        new Date().toISOString(),
+        name || "",
+        phone || "",
+        address || "",
+        personalityType || "",
+        hasShirt ? "YES" : "",
+        shirtTypeColor,
+        hasShirt ? size || "" : "",
+        template || "",
+        position || "",
+        hasCap ? "YES" : "",
+        capColor,
+        hasPassport ? "YES" : "",
+        hasLanyard ? "YES" : "",
+        lanyardColor,
+        patchesString,
+        orderSummary || "",
+        price || 0,
+        cloudinaryResponse.secure_url || "",
       ],
     ];
 
     const sheetsResponse = await sheets.spreadsheets.values.append({
       spreadsheetId: spreadsheetId,
-      range: "User Data!A:P", // Updated range to include hat columns (P = 16th column)
+      // Use explicit row anchors for maximum A1 notation compatibility.
+      range: "'User Data'!A1:S1",
       valueInputOption: "RAW",
       requestBody: {
         values: values,

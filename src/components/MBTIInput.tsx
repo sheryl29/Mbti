@@ -2,10 +2,30 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFlow } from "../contexts/FlowContext";
 
+const VALID_MBTI_TYPES = new Set([
+  "INTJ",
+  "INTP",
+  "ENTJ",
+  "ENTP",
+  "INFJ",
+  "INFP",
+  "ENFJ",
+  "ENFP",
+  "ISTJ",
+  "ISFJ",
+  "ESTJ",
+  "ESFJ",
+  "ISTP",
+  "ISFP",
+  "ESTP",
+  "ESFP",
+]);
+
 const MBTIInput: React.FC = () => {
   const navigate = useNavigate();
   const { userData, updateUserData } = useFlow();
   const [mbti, setMbti] = useState(userData.mbti || "");
+  const [error, setError] = useState("");
 
   // Function to map MBTI types to personality types
   const getPersonalityType = (mbtiType: string): string => {
@@ -60,16 +80,23 @@ const MBTIInput: React.FC = () => {
   };
 
   const handleNext = () => {
-    if (mbti.trim()) {
-      const personalityType = getPersonalityType(mbti.trim());
+    const normalizedMbti = mbti.trim().toUpperCase();
+    if (normalizedMbti) {
+      if (!VALID_MBTI_TYPES.has(normalizedMbti)) {
+        setError("Please enter a valid MBTI type (example: INTJ).");
+        return;
+      }
+
+      setError("");
+      const personalityType = getPersonalityType(normalizedMbti);
       console.log(
-        `MBTI: ${mbti.trim()} -> Personality Type: ${personalityType}`
+        `MBTI: ${normalizedMbti} -> Personality Type: ${personalityType}`
       );
       updateUserData({
-        mbti: mbti.trim(),
+        mbti: normalizedMbti,
         personalityType: personalityType,
       });
-      navigate("/personality-result");
+      navigate("/other-patch-result");
     }
   };
 
@@ -94,7 +121,10 @@ const MBTIInput: React.FC = () => {
         <input
           type="text"
           value={mbti}
-          onChange={(e) => setMbti(e.target.value.toUpperCase())}
+          onChange={(e) => {
+            setMbti(e.target.value.toUpperCase());
+            if (error) setError("");
+          }}
           onKeyPress={(e) => {
             if (e.key === "Enter" && mbti.trim()) {
               handleNext();
@@ -105,6 +135,7 @@ const MBTIInput: React.FC = () => {
           maxLength={4}
           autoFocus
         />
+        {error && <p className="mbti-input-error">{error}</p>}
       </div>
 
       {/* Button group */}

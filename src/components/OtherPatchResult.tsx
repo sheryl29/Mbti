@@ -7,6 +7,25 @@ import {
   getOtherPatchMbtiCopy,
 } from "../data/otherPatchMbtiCopy";
 
+const VALID_MBTI_TYPES = new Set([
+  "INTJ",
+  "INTP",
+  "ENTJ",
+  "ENTP",
+  "INFJ",
+  "INFP",
+  "ENFJ",
+  "ENFP",
+  "ISTJ",
+  "ISFJ",
+  "ESTJ",
+  "ESFJ",
+  "ISTP",
+  "ISFP",
+  "ESTP",
+  "ESFP",
+]);
+
 const OtherPatchResult: React.FC = () => {
   const navigate = useNavigate();
   const { testAnswers, updateUserData, userData } = useFlow();
@@ -33,11 +52,14 @@ const OtherPatchResult: React.FC = () => {
   const tf = countByRule(10, 14, (a) => a === 0 || a === 2);
   const jp = countByRule(15, 19, (a) => a === 0 || a === 1);
 
-  const type =
+  const calculatedType =
     `${ie.firstTrait >= ie.secondTrait ? "I" : "E"}` +
     `${sn.firstTrait >= sn.secondTrait ? "S" : "N"}` +
     `${tf.firstTrait >= tf.secondTrait ? "T" : "F"}` +
     `${jp.firstTrait >= jp.secondTrait ? "J" : "P"}`;
+
+  const enteredMbti = userData.mbti?.trim().toUpperCase() || "";
+  const type = VALID_MBTI_TYPES.has(enteredMbti) ? enteredMbti : calculatedType;
 
   const theme = getMbtiVisualTheme(type);
   const copy = getOtherPatchMbtiCopy(type);

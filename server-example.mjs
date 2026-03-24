@@ -71,7 +71,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+// Payment image arrives as base64 JSON. Default parser limit is too small.
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Initialize Google APIs
 const auth = new google.auth.GoogleAuth({
@@ -113,7 +115,23 @@ app.get("/api/google-sheets/token", async (req, res) => {
 app.post("/api/process-order", async (req, res) => {
   try {
     console.log("Received process-order request");
-    const { name, phone, address, personalityType, template, position, paymentImage } = req.body;
+    const {
+      name,
+      phone,
+      address,
+      personalityType,
+      itemType,
+      color,
+      size,
+      template,
+      position,
+      price,
+      orderSummary,
+      paymentImage,
+      selectedPatches,
+      selectedHat,
+      selectedItems,
+    } = req.body;
 
     // Validate required fields
     if (!name || !phone || !address || !personalityType) {
@@ -147,22 +165,71 @@ app.post("/api/process-order", async (req, res) => {
     const spreadsheetId = process.env.GOOGLE_SHEETS_ID || "1Zvq4LzomnEwRCS_qOyMPGhzeKglHTXAWwmdJoFdNzqg";
     console.log("Spreadsheet ID:", spreadsheetId);
 
+    const normalizedItemType = (itemType || "").toLowerCase();
+    const normalizedSummary = (orderSummary || "").toLowerCase();
+
+    const hasShirt =
+      normalizedItemType.includes("shirt") || normalizedSummary.includes("shirt");
+    const hasCap =
+      normalizedItemType.includes("cap") || normalizedSummary.includes("cap");
+    const hasPassport = normalizedSummary.includes("passport");
+    const hasLanyard = normalizedSummary.includes("lanyard");
+
+    const shirtTypeColor = hasShirt
+      ? `${itemType || "shirt"}${color ? ` / ${color}` : ""}`
+      : "";
+    const capColor = hasCap
+      ? selectedHat?.color || (normalizedItemType.includes("cap") ? color || "" : "")
+      : "";
+    const lanyardItem = Array.isArray(selectedItems)
+      ? selectedItems.find((item) => item?.type === "lanyard")
+      : undefined;
+    const summaryLanyardMatch = (orderSummary || "").match(
+      /CARD HOLDER\s*&\s*LANYARD\s+([A-Za-z]+)/i
+    );
+    const lanyardColor =
+      lanyardItem?.color ||
+      (selectedHat?.type === "lanyard" ? selectedHat.color || "" : "") ||
+      summaryLanyardMatch?.[1]?.toLowerCase() ||
+      "";
+
+    const patchesString =
+      selectedPatches && Array.isArray(selectedPatches) && selectedPatches.length > 0
+        ? selectedPatches.map((patch) => `${patch.patchId}:${patch.quantity}`).join(", ")
+        : "";
+
+    // Column order (A:S):
+    // time, name, phone num, address/Pickup, personality type, shirt, shirt type/color, size,
+    // template, position, cap, cap color, passport, lanyard, lanyard color, patches,
+    // order summary, price, payment url
     const values = [
       [
-        name,
-        phone,
-        address,
-        personalityType,
-        template,
-        position || "",
-        cloudinaryResponse.secure_url,
         new Date().toISOString(),
+        name || "",
+        phone || "",
+        address || "",
+        personalityType || "",
+        hasShirt ? "YES" : "",
+        shirtTypeColor,
+        hasShirt ? size || "" : "",
+        template || "",
+        position || "",
+        hasCap ? "YES" : "",
+        capColor,
+        hasPassport ? "YES" : "",
+        hasLanyard ? "YES" : "",
+        lanyardColor,
+        patchesString,
+        orderSummary || "",
+        price || 0,
+        cloudinaryResponse.secure_url || "",
       ],
     ];
 
     const sheetsResponse = await sheets.spreadsheets.values.append({
       spreadsheetId: spreadsheetId,
-      range: "User Data!A:H",
+      // Use explicit row anchors for maximum A1 notation compatibility.
+      range: "'User Data'!A1:S1",
       valueInputOption: "RAW",
       requestBody: {
         values: values,
@@ -186,6 +253,17 @@ app.post("/api/process-order", async (req, res) => {
       details: error.message
     });
   }
+});
+
+// Handle oversized body with a clear message instead of HTML stacktrace.
+app.use((err, req, res, next) => {
+  if (err?.type === "entity.too.large") {
+    return res.status(413).json({
+      error:
+        "Uploaded image is too large. Please upload a smaller image (recommended under 8MB).",
+    });
+  }
+  return next(err);
 });
 
 const PORT = process.env.PORT || 3001;

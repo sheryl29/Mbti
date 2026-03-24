@@ -9150,6 +9150,11 @@ body {
   cursor: not-allowed;
 }
 
+.page20-next-button.is-clicked {
+  transform: scale(0.97);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+}
+
 /* Responsive breakpoints for Page20 */
 @media (max-width: 480px) {
   .page20-template {
@@ -9255,7 +9260,8 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .page20-next-button {
+  /* Only Page20’s quiz layout uses the 300px-wide NEXT; other pages keep full width of their column */
+  .page20-template .page20-next-button {
     max-width: 300px;
     width: 100%;
     margin: 20px auto 0 auto;
@@ -9274,12 +9280,12 @@ body {
     animation: fadeInUp 0.8s ease-out 1.3s both;
   }
 
-  .page20-next-button:hover {
+  .page20-template .page20-next-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 
-  .page20-next-button:active {
+  .page20-template .page20-next-button:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
@@ -17581,6 +17587,15 @@ body {
   margin: 0 auto;
 }
 
+.select-passport-color-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
 .select-cap-color-grid-two-columns {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -17610,9 +17625,9 @@ body {
 .select-cap-color-image-wrapper {
   background: #e8e8e8;
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px;
   width: 100%;
-  max-width: 110px;
+  max-width: 140px;
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -17623,11 +17638,46 @@ body {
 }
 
 .select-cap-color-image-wrapper img {
-  width: 80%;
+  width: 92%;
   height: auto;
   max-width: 100%;
   object-fit: contain;
   background: transparent;
+}
+
+/* Lanyard color page uses bigger images than caps */
+.select-lanyard-color-image-wrapper {
+  background: #e8e8e8;
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  max-width: 190px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  margin: 0 auto;
+}
+
+.select-lanyard-color-image-wrapper img {
+  width: 94%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  background: transparent;
+}
+
+.select-cap-color-item.selected .select-lanyard-color-image-wrapper {
+  background: rgba(0, 74, 173, 0.1);
+  border: 3px solid #004aad;
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+}
+
+.select-cap-color-item:hover .select-lanyard-color-image-wrapper {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .select-cap-color-item.selected .select-cap-color-image-wrapper {
@@ -17695,6 +17745,10 @@ body {
     max-width: 280px;
   }
 
+  .select-passport-color-grid {
+    max-width: 280px;
+  }
+
   .select-cap-color-grid-two-columns {
     gap: 8px;
     max-width: 320px;
@@ -17709,12 +17763,21 @@ body {
   }
 
   .select-cap-color-image-wrapper {
-    padding: 10px;
-    max-width: 90px;
+    padding: 12px;
+    max-width: 120px;
   }
 
   .select-cap-color-image-wrapper img {
-    width: 75%;
+    width: 90%;
+  }
+
+  .select-lanyard-color-image-wrapper {
+    padding: 14px;
+    max-width: 120px;
+  }
+
+  .select-lanyard-color-image-wrapper img {
+    width: 92%;
   }
 
   .select-cap-color-label {
@@ -18181,4 +18244,291 @@ body {
   .add-on-patches-quantity-number {
     font-size: 16px;
   }
+}
+
+/* =========================================================
+   Pick Your Item - Tile Layout (SelectItem.tsx)
+   ========================================================= */
+
+.select-item-page {
+  align-items: center;
+}
+
+.select-item-title {
+  font-family: "Fredoka One", cursive;
+  font-size: clamp(30px, 8vw, 46px);
+  font-weight: 700;
+  color: #004aad;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 1.05;
+  text-align: center;
+  text-shadow: -2px -2px 0 rgba(255, 255, 255, 0.95),
+    2px -2px 0 rgba(255, 255, 255, 0.95),
+    -2px 2px 0 rgba(255, 255, 255, 0.95),
+    2px 2px 0 rgba(255, 255, 255, 0.95);
+  margin-top: 5px;
+}
+
+.select-item-grid {
+  width: 100%;
+  max-width: 460px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin: 0 auto;
+  align-content: start;
+}
+
+.select-item-tile {
+  border: 0;
+  background: #e8e8e8;
+  border-radius: 22px;
+  padding: 18px 14px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  width: 100%;
+  min-height: 270px;
+  color: inherit;
+}
+
+.select-item-tile.selected {
+  border: 3px solid rgba(0, 74, 173, 0.55);
+  background: rgba(0, 74, 173, 0.06);
+}
+
+.select-item-tile-label {
+  font-family: "Fredoka One", cursive;
+  font-size: clamp(14px, 3.5vw, 18px);
+  font-weight: 400;
+  color: #004aad;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 8px 18px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 190px;
+}
+
+.select-item-tile-price {
+  font-family: "Fredoka One", cursive;
+  font-size: clamp(16px, 3.2vw, 22px);
+  font-weight: 400;
+  color: #004aad;
+  text-align: center;
+  margin-top: auto; /* Keeps price at the bottom inside each tile. */
+  padding-bottom: 4px;
+}
+
+/* Internal product grids used inside each tile */
+.shirt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+  justify-items: center;
+}
+
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+  justify-items: center;
+}
+
+.passport-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+  justify-items: center;
+}
+
+.lanyard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr; /* 2x1 */
+  gap: 10px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+  justify-items: center;
+}
+
+.select-item-product img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Keep the Next button at the bottom on small screens */
+@media (max-width: 480px) {
+  .select-item-grid {
+    max-width: 420px;
+    gap: 14px;
+  }
+
+  .select-item-tile {
+    min-height: 220px;
+  }
+}
+
+/* 20-question “other patch” MBTI result — matches PersonalityResult hero + pill + rows */
+.other-patch-mbti-page {
+  padding-bottom: clamp(96px, 16vh, 130px);
+  justify-content: flex-start;
+  padding-top: clamp(20px, 5vh, 36px);
+  --op-row-odd-bg: #e3eef5;
+  --op-row-odd-text: #6b4bb5;
+  --op-row-even-bg: #c4b5e8;
+  --op-row-even-text: #ffffff;
+}
+
+.other-patch-type-pill {
+  font-family: "Fredoka One", cursive;
+  font-size: clamp(26px, 7vw, 40px);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  padding: 16px 36px;
+  margin: 4px 0 10px;
+  border-radius: 999px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #e8eef5 0%, #dce6ef 50%, #d5e0eb 100%);
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08),
+    inset 0 2px 0 rgba(255, 255, 255, 0.75);
+  animation: bannerSlideIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s both;
+}
+
+.other-patch-archetype {
+  font-family: "Fredoka One", cursive;
+  font-size: clamp(20px, 5.2vw, 30px);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  margin: 0 0 18px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  animation: textPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.65s both;
+}
+
+.other-patch-detail-rows {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 auto 8px;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 1s ease-out 0.85s both;
+}
+
+.other-patch-detail-row {
+  border-radius: 999px;
+  padding: 14px 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: clamp(14px, 3.3vw, 16px);
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.other-patch-theme-purple {
+  --op-row-odd-bg: #e3eef5;
+  --op-row-odd-text: #6b4bb5;
+  --op-row-even-bg: #c4b5e8;
+  --op-row-even-text: #ffffff;
+}
+
+.other-patch-theme-yellow {
+  --op-row-odd-bg: #fff5e6;
+  --op-row-odd-text: #c97800;
+  --op-row-even-bg: #ffd27a;
+  --op-row-even-text: #ffffff;
+}
+
+.other-patch-theme-blue {
+  --op-row-odd-bg: #e3edf7;
+  --op-row-odd-text: #004aad;
+  --op-row-even-bg: #7fa8db;
+  --op-row-even-text: #ffffff;
+}
+
+.other-patch-theme-green {
+  --op-row-odd-bg: #edf5eb;
+  --op-row-odd-text: #4a7a32;
+  --op-row-even-bg: #a8cf95;
+  --op-row-even-text: #ffffff;
+}
+
+.other-patch-detail-row:nth-child(odd) {
+  background: var(--op-row-odd-bg);
+  color: var(--op-row-odd-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.other-patch-detail-row:nth-child(even) {
+  background: var(--op-row-even-bg);
+  color: var(--op-row-even-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.other-patch-mbti-actions {
+  width: 100%;
+  max-width: 420px;
+  margin: 18px auto 0;
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Match width of .other-patch-detail-rows + same entrance/hover feel as .otherpatch1-next-button */
+.other-patch-mbti-actions .page20-next-button {
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  display: block;
+  border-radius: 20px;
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeInUp 0.8s ease-out 1.3s both;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.other-patch-mbti-actions .page20-next-button:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  animation: buttonPulse 0.6s ease-in-out;
 }

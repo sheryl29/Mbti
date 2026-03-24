@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFlow } from "../contexts/FlowContext";
+import type { SelectedItem } from "../types";
 
 const SelectShirtColor: React.FC = () => {
   const navigate = useNavigate();
-  const { updateUserData } = useFlow();
+  const { updateUserData, userData } = useFlow();
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
@@ -32,13 +33,21 @@ const SelectShirtColor: React.FC = () => {
       const premiumColors = ["nolly", "wolly", "tilly", "velly"];
       const price = premiumColors.includes(selectedColor) ? 160 : 150;
 
+      const newShirtItem: SelectedItem = {
+        type: "shirt",
+        color: selectedColor,
+        size: selectedSize,
+        price,
+      };
+
+      const prevItems = userData.selectedItems ?? [];
+      const nextItems = prevItems.some((i) => i.type === "shirt")
+        ? prevItems.map((i) => (i.type === "shirt" ? { ...i, ...newShirtItem } : i))
+        : [...prevItems, newShirtItem];
+
       updateUserData({
-        selectedItem: {
-          type: "shirt",
-          color: selectedColor,
-          size: selectedSize,
-          price: price,
-        },
+        selectedItems: nextItems,
+        selectedItem: newShirtItem, // keep old field for backward compatibility
       });
       navigate("/design-shirt");
     }

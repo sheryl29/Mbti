@@ -18,7 +18,7 @@ const OtherPatch7: React.FC = () => {
       };
 
       const colorValue = optionToColorMap[selectedOption];
-      addTestAnswer(6, colorValue); // Question 6
+      addTestAnswer(7, colorValue); // Question 7
 
       // Navigate to next page
       navigate("/other-patch-8");

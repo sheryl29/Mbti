@@ -18,10 +18,10 @@ const OtherPatch20: React.FC = () => {
       };
 
       const colorValue = optionToColorMap[selectedOption];
-      addTestAnswer(6, colorValue); // Question 6
+      addTestAnswer(20, colorValue); // Question 20
 
-      // Navigate to next page (or completion page)
-      navigate("/personality-result");
+      // Navigate to 20-question MBTI result page
+      navigate("/other-patch-result");
     }
   };
 

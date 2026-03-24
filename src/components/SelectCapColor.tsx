@@ -5,73 +5,56 @@ import { useFlow } from "../contexts/FlowContext";
 const SelectCapColor: React.FC = () => {
   const navigate = useNavigate();
   const { updateUserData, userData } = useFlow();
-  const [selectedHatType, setSelectedHatType] = useState<"hat" | "bucket_hat" | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-  // Baseball caps (hat) - Column 1
-  const hatColors = [
-    { image: "/6-removebg-preview.png", label: "BLACK", value: "black" },
-    { image: "/8-removebg-preview.png", label: "WHITE", value: "white" },
-    { image: "/7-removebg-preview.png", label: "BEIGE", value: "beige" },
-    { image: "/5-removebg-preview.png", label: "NAVY", value: "navy" },
+  const caps = [
+    { image: "/cap1.png", label: "BLACK", value: "black" },
+    { image: "/cap2.png", label: "BLUE", value: "blue" },
+    { image: "/cap3.png", label: "CREAM & NAVY", value: "cream_navy" },
+    { image: "/cap4.png", label: "CREAM", value: "cream" },
   ];
 
-  // Bucket hats - Column 2
-  // Note: Update these image paths when bucket hat images are available
-  const bucketHatColors = [
-    { image: "/16-removebg-preview.png", label: "BLACK", value: "black" },
-    { image: "/17-removebg-preview.png", label: "WHITE", value: "white" },
-    { image: "/18-removebg-preview.png", label: "BEIGE", value: "beige" },
-    { image: "/19-removebg-preview.png", label: "NAVY", value: "navy" },
-  ];
-
-  const handleItemClick = (hatType: "hat" | "bucket_hat", color: string) => {
-    setSelectedHatType(hatType);
-    setSelectedColor(color);
-  };
+  const hatType: "hat" = "hat";
 
   const handleNext = () => {
-    if (selectedHatType && selectedColor) {
-      const hatPrice = selectedHatType === "bucket_hat" ? 80 : 75;
-      
-      // Check if this is a bundle (shirt + cap) or only cap
-      if (userData.isBundle) {
-        // Bundle: Store cap in selectedHat (shirt is already in selectedItem)
-        updateUserData({
-          selectedHat: {
-            type: "cap",
-            color: selectedColor,
-            hatType: selectedHatType,
-            price: hatPrice,
-          },
-        });
-      } else {
-        // Only cap: Store in selectedItem
-        updateUserData({
-          selectedItem: {
-            type: "cap",
-            color: selectedColor,
-            hatType: selectedHatType,
-            price: hatPrice,
-          },
-        });
-      }
+    if (!selectedColor) return;
+
+    const capItem = {
+      type: "cap" as const,
+      color: selectedColor,
+      hatType,
+      price: 87,
+    };
+
+    const prevItems = userData.selectedItems ?? [];
+    const hasShirt = prevItems.some((i) => i.type === "shirt");
+
+    const nextItems = prevItems.some((i) => i.type === "cap")
+      ? prevItems.map((i) => (i.type === "cap" ? { ...i, ...capItem } : i))
+      : [...prevItems, capItem];
+
+    updateUserData({
+      selectedItems: nextItems,
+      ...(hasShirt ? { selectedHat: capItem } : { selectedItem: capItem }),
+    });
+
+    const selectedTypes = new Set(nextItems.map((i) => i.type));
+    if (selectedTypes.has("passport_case")) {
+      navigate("/select-passport-color");
+    } else if (selectedTypes.has("lanyard")) {
+      navigate("/select-lanyard-color");
+    } else {
       navigate("/add-on-patches");
     }
   };
 
   const handleBack = () => {
-    if (userData.isBundle) {
-      // Bundle: Go back to design shirt
-      navigate("/design-shirt");
-    } else {
-      // Only cap: Go back to select item
-      navigate("/select-item");
-    }
+    const hasShirt = (userData.selectedItems ?? []).some((i) => i.type === "shirt");
+    navigate(hasShirt ? "/design-shirt" : "/select-item");
   };
 
-  const isSelected = (hatType: "hat" | "bucket_hat", color: string) => {
-    return selectedHatType === hatType && selectedColor === color;
+  const isSelected = (color: string) => {
+    return selectedColor === color;
   };
 
   return (
@@ -82,51 +65,55 @@ const SelectCapColor: React.FC = () => {
 
       <div className="select-cap-color-title">
         <div className="select-cap-color-title-line">PICK YOUR</div>
-        <div className="select-cap-color-title-line">HAT</div>
+        <div className="select-cap-color-title-line">CAP</div>
       </div>
 
       <div className="select-cap-color-grid-two-columns">
-        {/* Column 1: Baseball Caps (hat) */}
+        {/* Column left: cap1, cap3 */}
         <div className="select-cap-color-column">
-          {hatColors.map((cap, index) => (
-            <div
-              key={`hat-${index}`}
-              className={`select-cap-color-item ${
-                isSelected("hat", cap.value) ? "selected" : ""
-              }`}
-              onClick={() => handleItemClick("hat", cap.value)}
-            >
-              <div className="select-cap-color-image-wrapper">
-                <img src={cap.image} alt={cap.label} />
+          {caps
+            .filter((_, idx) => idx % 2 === 0)
+            .map((cap) => (
+              <div
+                key={cap.value}
+                className={`select-cap-color-item ${
+                  isSelected(cap.value) ? "selected" : ""
+                }`}
+                onClick={() => setSelectedColor(cap.value)}
+              >
+                <div className="select-cap-color-image-wrapper">
+                  <img src={cap.image} alt={cap.label} />
+                </div>
+                <div className="select-cap-color-label">{cap.label}</div>
               </div>
-              <div className="select-cap-color-label">{cap.label}</div>
-            </div>
-          ))}
+            ))}
         </div>
 
-        {/* Column 2: Bucket Hats */}
+        {/* Column right: cap2, cap4 */}
         <div className="select-cap-color-column">
-          {bucketHatColors.map((cap, index) => (
-            <div
-              key={`bucket_hat-${index}`}
-              className={`select-cap-color-item ${
-                isSelected("bucket_hat", cap.value) ? "selected" : ""
-              }`}
-              onClick={() => handleItemClick("bucket_hat", cap.value)}
-            >
-              <div className="select-cap-color-image-wrapper">
-                <img src={cap.image} alt={cap.label} />
+          {caps
+            .filter((_, idx) => idx % 2 === 1)
+            .map((cap) => (
+              <div
+                key={cap.value}
+                className={`select-cap-color-item ${
+                  isSelected(cap.value) ? "selected" : ""
+                }`}
+                onClick={() => setSelectedColor(cap.value)}
+              >
+                <div className="select-cap-color-image-wrapper">
+                  <img src={cap.image} alt={cap.label} />
+                </div>
+                <div className="select-cap-color-label">{cap.label}</div>
               </div>
-              <div className="select-cap-color-label">{cap.label}</div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
       <button
         className="page20-next-button"
         onClick={handleNext}
-        disabled={!selectedHatType || !selectedColor}
+        disabled={!selectedColor}
       >
         NEXT
       </button>

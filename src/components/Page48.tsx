@@ -5,7 +5,7 @@ const Page48: React.FC = () => {
     <div className="image-screen">
       <div className="image-container">
         <img
-          src="/WEBSITE LSP (2).svg"
+          src="/mark-your-calendar.svg"
           alt="Thank You"
           className="landing-image"
         />

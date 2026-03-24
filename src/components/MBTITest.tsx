@@ -20,7 +20,7 @@ const MBTITest: React.FC = () => {
       {/* Character icons */}
       <div className="mbti-test-characters">
         <img
-          src="/findout.webp"
+          src="/findout.png"
           alt="MBTI Characters"
           className="mbti-test-character-icon"
         />

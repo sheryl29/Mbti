@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFlow } from "../contexts/FlowContext";
 import { ApiService } from "../services/apiService";
-import type { CompleteOrderData } from "../types";
+import type { CompleteOrderData, SelectedItem } from "../types";
 
 const Payment: React.FC = () => {
   const navigate = useNavigate();
@@ -18,9 +18,10 @@ const Payment: React.FC = () => {
     tshirt: 129,
     ringtee: 139,
     bucketHat: 80,
-    cap: 75,
+    cap: 87,
+    passportCase: 99,
+    lanyard: 75,
     patch: 12,
-    bundlingDiscount: 10,
   };
 
   // Determine shirt type based on color
@@ -31,66 +32,149 @@ const Payment: React.FC = () => {
     return premiumColors.includes(color) ? "ringtee" : "tshirt";
   };
 
-  // Calculate item details and prices
+  const getActiveSelectedItems = (): SelectedItem[] => {
+    if (userData.selectedItems && userData.selectedItems.length > 0) {
+      return userData.selectedItems;
+    }
+
+    // Legacy support: old flow stored only one item + optional selectedHat.
+    return [userData.selectedItem, userData.selectedHat].filter(
+      Boolean
+    ) as SelectedItem[];
+  };
+
+  const getItemBasePrice = (item: SelectedItem): number => {
+    if (item.type === "shirt") {
+      return getShirtType(item.color || "") === "ringtee"
+        ? PRICES.ringtee
+        : PRICES.tshirt;
+    }
+    if (item.type === "cap") {
+      return item.hatType === "bucket_hat" ? PRICES.bucketHat : PRICES.cap;
+    }
+    if (item.type === "passport_case") return item.price ?? PRICES.passportCase;
+    if (item.type === "lanyard") return item.price ?? PRICES.lanyard;
+    return 0;
+  };
+
+  // Calculate item details and prices (base prices, before any deals)
   const getOrderDetails = () => {
     const details: Array<{ name: string; price: number }> = [];
-    const item = userData.selectedItem; // Shirt (or cap if only cap selected)
-    const hat = userData.selectedHat; // Hat (only in bundle mode)
+    const selectedItems = getActiveSelectedItems();
 
-    // Add shirt if selected (in bundle or single shirt)
-    if (item?.type === "shirt") {
-      const shirtType = getShirtType(item.color || "");
-      const shirtName = shirtType === "ringtee" ? "RINGER TEE" : "T-SHIRT";
-      const shirtPrice = shirtType === "ringtee" ? PRICES.ringtee : PRICES.tshirt;
-      details.push({ name: shirtName, price: shirtPrice });
-    }
-
-    // Add hat if selected (in bundle mode, hat is in selectedHat; in single cap mode, cap is in selectedItem)
-    if (hat?.type === "cap") {
-      // Bundle mode: hat is in selectedHat
-      const hatName = hat.hatType === "bucket_hat" ? "BUCKET HAT" : "CAP";
-      const hatPrice = hat.hatType === "bucket_hat" ? PRICES.bucketHat : PRICES.cap;
-      details.push({ name: hatName, price: hatPrice });
-    } else if (item?.type === "cap") {
-      // Single cap mode: cap is in selectedItem
-      const hatName = item.hatType === "bucket_hat" ? "BUCKET HAT" : "CAP";
-      const hatPrice = item.hatType === "bucket_hat" ? PRICES.bucketHat : PRICES.cap;
-      details.push({ name: hatName, price: hatPrice });
-    }
-
-    // Add patches
-    if (userData.selectedPatches && userData.selectedPatches.length > 0) {
-      const totalPatches = userData.selectedPatches.reduce(
-        (sum, patch) => sum + patch.quantity,
-        0
-      );
-      if (totalPatches > 0) {
-        const patchPrice = totalPatches * PRICES.patch;
-        details.push({ name: "ADD ON PATCH", price: patchPrice });
+    for (const item of selectedItems) {
+      if (item.type === "shirt") {
+        const shirtType = getShirtType(item.color || "");
+        const shirtName = shirtType === "ringtee" ? "RINGER TEE" : "T-SHIRT";
+        details.push({ name: shirtName, price: getItemBasePrice(item) });
+      } else if (item.type === "cap") {
+        const hatName = item.hatType === "bucket_hat" ? "BUCKET HAT" : "CAP";
+        details.push({ name: hatName, price: getItemBasePrice(item) });
+      } else if (item.type === "passport_case") {
+        details.push({ name: "PASSPORT CASE", price: getItemBasePrice(item) });
+      } else if (item.type === "lanyard") {
+        details.push({ name: "CARD HOLDER & LANYARD", price: getItemBasePrice(item) });
       }
+    }
+
+    const totalPatches = getTotalPatchCount();
+    if (totalPatches > 0) {
+      details.push({
+        name: `ADD ON PATCH (${totalPatches})`,
+        price: totalPatches * PRICES.patch,
+      });
     }
 
     return details;
   };
 
-  // Check if bundling discount applies (shirt + hat)
-  const hasBundlingDiscount = () => {
-    // Bundle discount applies when user selected both shirt and cap
-    return userData.isBundle === true;
+  const getTotalPatchCount = () => {
+    return (userData.selectedPatches || []).reduce(
+      (sum, patch) => sum + patch.quantity,
+      0
+    );
+  };
+
+  const getPatchDealDiscount = () => {
+    const count = getTotalPatchCount();
+    if (count === 2) return 2; // 24 -> 22
+    if (count === 3) return 6; // 36 -> 30
+    return 0;
+  };
+
+  const getBundleDealDiscount = () => {
+    const selectedItems = getActiveSelectedItems();
+    const byType: Partial<Record<SelectedItem["type"], SelectedItem>> = {};
+    for (const item of selectedItems) byType[item.type] = item;
+
+    const shirt = byType.shirt;
+    const cap = byType.cap;
+    const passport = byType.passport_case;
+    const lanyard = byType.lanyard;
+
+    const candidates: Array<{ name: string; discount: number }> = [];
+
+    if (cap && lanyard) {
+      const base = getItemBasePrice(cap) + getItemBasePrice(lanyard);
+      candidates.push({
+        name: "STARTER PACK",
+        discount: Math.max(0, base - 138),
+      });
+    }
+
+    if (passport && lanyard) {
+      const base = getItemBasePrice(passport) + getItemBasePrice(lanyard);
+      candidates.push({
+        name: "TRAVEL BUDDY PACK",
+        discount: Math.max(0, base - 148),
+      });
+    }
+
+    if (shirt && cap) {
+      const shirtType = getShirtType(shirt.color || "");
+      const base = getItemBasePrice(shirt) + getItemBasePrice(cap);
+      candidates.push({
+        name: "DAILY FIT PACK",
+        discount: Math.max(0, base - (shirtType === "ringtee" ? 193 : 184)),
+      });
+    }
+
+    if (shirt && passport) {
+      const shirtType = getShirtType(shirt.color || "");
+      const base = getItemBasePrice(shirt) + getItemBasePrice(passport);
+      candidates.push({
+        name: "TAKEOFF PACK",
+        discount: Math.max(0, base - (shirtType === "ringtee" ? 203 : 194)),
+      });
+    }
+
+    if (shirt && lanyard) {
+      const shirtType = getShirtType(shirt.color || "");
+      const base = getItemBasePrice(shirt) + getItemBasePrice(lanyard);
+      candidates.push({
+        name: "MAIN CHARACTER PACK",
+        discount: Math.max(0, base - (shirtType === "ringtee" ? 256 : 248)),
+      });
+    }
+
+    if (candidates.length === 0) return null;
+    return candidates.reduce((best, curr) =>
+      curr.discount > best.discount ? curr : best
+    );
   };
 
   // Calculate total price
   const calculateTotal = () => {
     const details = getOrderDetails();
     const subtotal = details.reduce((sum, item) => sum + item.price, 0);
-    const discount = hasBundlingDiscount() ? PRICES.bundlingDiscount : 0;
-    return subtotal - discount;
+    const bundleDiscount = getBundleDealDiscount()?.discount ?? 0;
+    const patchDealDiscount = getPatchDealDiscount();
+    return subtotal - bundleDiscount - patchDealDiscount;
   };
 
   // Format order summary (for API)
   const getOrderSummary = () => {
-    const item = userData.selectedItem; // Shirt (or cap if only cap selected)
-    const hat = userData.selectedHat; // Hat (only in bundle mode)
+    const selectedItems = getActiveSelectedItems();
     const summaries: string[] = [];
 
     const colorLabels: { [key: string]: string } = {
@@ -117,40 +201,55 @@ const Payment: React.FC = () => {
       middle: "Middle",
     };
 
-    // Add shirt summary
-    if (item?.type === "shirt") {
-      const color = colorLabels[item.color || ""] || item.color || "";
-      const size = item.size?.toUpperCase() || "";
-      const template = templateLabels[userData.shirtDesign?.template || ""] || "";
-      const position = positionLabels[userData.shirtDesign?.position || ""] || "";
+    // Preserve a stable ordering in the summary.
+    const typeOrder: Array<SelectedItem["type"]> = [
+      "shirt",
+      "cap",
+      "passport_case",
+      "lanyard",
+    ];
 
-      const shirtType = getShirtType(item.color || "");
-      const shirtName = shirtType === "ringtee" ? "Ringer Tee" : "T-shirt";
-      let summary = `${shirtName} ${color}`;
-      if (size) summary += ` ${size}`;
-      if (template && position) {
-        if (template === position && template === "Middle") {
+    for (const type of typeOrder) {
+      const item = selectedItems.find((i) => i.type === type);
+      if (!item) continue;
+
+      if (item.type === "shirt") {
+        const color = colorLabels[item.color || ""] || item.color || "";
+        const size = item.size?.toUpperCase() || "";
+        const template =
+          templateLabels[userData.shirtDesign?.template || ""] || "";
+        const position =
+          positionLabels[userData.shirtDesign?.position || ""] || "";
+
+        const shirtType = getShirtType(item.color || "");
+        const shirtName = shirtType === "ringtee" ? "Ringer Tee" : "T-shirt";
+        let summary = `${shirtName} ${color}`;
+        if (size) summary += ` ${size}`;
+
+        if (template && position) {
+          if (template === position && template === "Middle") {
+            summary += ` ${template}`;
+          } else {
+            summary += ` ${template} ${position}`;
+          }
+        } else if (template) {
           summary += ` ${template}`;
-        } else {
-          summary += ` ${template} ${position}`;
         }
-      } else if (template) {
-        summary += ` ${template}`;
-      }
-      summaries.push(summary);
-    }
 
-    // Add hat summary (in bundle mode, hat is in selectedHat; in single cap mode, cap is in selectedItem)
-    if (hat?.type === "cap") {
-      // Bundle mode: hat is in selectedHat
-      const color = colorLabels[hat.color || ""] || hat.color || "";
-      const hatName = hat.hatType === "bucket_hat" ? "Bucket Hat" : "Cap";
-      summaries.push(`${hatName} ${color}`);
-    } else if (item?.type === "cap") {
-      // Single cap mode: cap is in selectedItem
-      const color = colorLabels[item.color || ""] || item.color || "";
-      const hatName = item.hatType === "bucket_hat" ? "Bucket Hat" : "Cap";
-      summaries.push(`${hatName} ${color}`);
+        summaries.push(summary);
+      } else if (item.type === "cap") {
+        const color = colorLabels[item.color || ""] || item.color || "";
+        const hatName = item.hatType === "bucket_hat" ? "Bucket Hat" : "Cap";
+        summaries.push(`${hatName} ${color}`);
+      } else if (item.type === "passport_case") {
+        const color = item.color ? item.color.toUpperCase() : "";
+        summaries.push(`PASSPORT CASE${color ? ` ${color}` : ""}`);
+      } else if (item.type === "lanyard") {
+        const color = item.color ? item.color.toUpperCase() : "";
+        summaries.push(
+          `CARD HOLDER & LANYARD${color ? ` ${color}` : ""}`
+        );
+      }
     }
 
     return summaries.join(" + ");
@@ -191,22 +290,35 @@ const Payment: React.FC = () => {
         setProcessingStatus("Preparing order data...");
 
         // Prepare order data
-        // For shirts use the selected template, for hats use "cap"
-        const hasShirt = userData.selectedItem?.type === "shirt";
-        const template = hasShirt 
-          ? (userData.shirtDesign?.template || "middle")
-          : "cap";
-        const position = hasShirt 
-          ? userData.shirtDesign?.position
-          : undefined;
+        const selectedItems =
+          userData.selectedItems && userData.selectedItems.length > 0
+            ? userData.selectedItems
+            : ([userData.selectedItem, userData.selectedHat].filter(
+                Boolean
+              ) as SelectedItem[]);
+
+        const hasShirt = selectedItems.some((i) => i.type === "shirt");
+        const shirtItem = selectedItems.find((i) => i.type === "shirt");
+        const primaryItem = hasShirt ? shirtItem : selectedItems[0];
+
+        const template = hasShirt
+          ? userData.shirtDesign?.template || "middle"
+          : primaryItem?.type || "cap";
+        const position = hasShirt ? userData.shirtDesign?.position : undefined;
 
         // Get order summary
         const orderSummary = getOrderSummary();
         const itemPrice = calculateTotal();
 
-        // Determine primary item type and color (shirt takes precedence, or cap if only cap)
-        const itemType = userData.selectedItem?.type || "shirt";
-        const color = userData.selectedItem?.color || "";
+        // Determine primary item type and color (shirt takes precedence).
+        const itemType = hasShirt
+          ? "shirt"
+          : primaryItem?.type === "cap"
+          ? "cap"
+          : primaryItem?.type || "shirt";
+        const color = primaryItem?.color || "";
+
+        const capItem = selectedItems.find((i) => i.type === "cap");
 
         const orderData: CompleteOrderData = {
           name: userData.name,
@@ -215,14 +327,22 @@ const Payment: React.FC = () => {
           personalityType: userData.personalityType || "",
           itemType: itemType,
           color: color,
-          size: userData.selectedItem?.size || undefined,
+          size: hasShirt ? shirtItem?.size || undefined : undefined,
           template: template,
           position: position,
           price: itemPrice,
           orderSummary: orderSummary,
           paymentImage: uploadedImage,
           selectedPatches: userData.selectedPatches || [],
-          selectedHat: userData.selectedHat, // Include hat data (only in bundle mode)
+          selectedItems,
+          selectedHat: capItem
+            ? {
+                type: "cap",
+                hatType: capItem.hatType,
+                color: capItem.color,
+                price: capItem.price,
+              }
+            : undefined,
         };
 
         setProcessingStatus("Processing order...");
@@ -296,7 +416,8 @@ const Payment: React.FC = () => {
       </div>
 
       {/* Details Section */}
-      {userData.selectedItem && (
+      {(userData.selectedItems && userData.selectedItems.length > 0) ||
+      userData.selectedItem ? (
         <div className="payment-details-section">
           <div className="payment-details-title">DETAILS</div>
           <div className="payment-details-list">
@@ -306,10 +427,21 @@ const Payment: React.FC = () => {
                 <span className="payment-details-price">{detail.price}K</span>
               </div>
             ))}
-            {hasBundlingDiscount() && (
+
+            {(() => {
+              const bundleDeal = getBundleDealDiscount();
+              return bundleDeal && bundleDeal.discount > 0 ? (
+                <div className="payment-details-item payment-details-discount">
+                  <span className="payment-details-name">{bundleDeal.name}</span>
+                  <span className="payment-details-price">-{bundleDeal.discount}K</span>
+                </div>
+              ) : null;
+            })()}
+
+            {getPatchDealDiscount() > 0 && (
               <div className="payment-details-item payment-details-discount">
-                <span className="payment-details-name">DISC 10%*</span>
-                <span className="payment-details-price">-{PRICES.bundlingDiscount}K</span>
+                <span className="payment-details-name">PATCH DEAL</span>
+                <span className="payment-details-price">-{getPatchDealDiscount()}K</span>
               </div>
             )}
           </div>
@@ -319,7 +451,7 @@ const Payment: React.FC = () => {
             <span className="payment-details-total-price">{calculateTotal()}K</span>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Upload Section */}
       <div className="upload-section">

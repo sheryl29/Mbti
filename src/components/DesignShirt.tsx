@@ -22,11 +22,17 @@ const DesignShirt: React.FC = () => {
       });
 
       // Check if this is a bundle (user selected both shirt and cap)
-      if (userData.isBundle) {
-        // Bundle: Navigate to cap selection
+      const selectedTypes = new Set(
+        (userData.selectedItems ?? []).map((i) => i.type)
+      );
+
+      if (selectedTypes.has("cap")) {
         navigate("/select-cap-color");
+      } else if (selectedTypes.has("passport_case")) {
+        navigate("/select-passport-color");
+      } else if (selectedTypes.has("lanyard")) {
+        navigate("/select-lanyard-color");
       } else {
-        // Only shirt: Navigate to patches
         navigate("/add-on-patches");
       }
     }

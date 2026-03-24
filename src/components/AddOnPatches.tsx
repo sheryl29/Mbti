@@ -93,8 +93,8 @@ const AddOnPatches: React.FC = () => {
     { id: "num-7", image: "/other-patches/num-7.png" },
     { id: "num-8", image: "/other-patches/num-8.png" },
     { id: "num-9", image: "/other-patches/num-9.png" },
-    { id: "char-!", image: "/other-patches/char-!.png" },
-    { id: "char-?", image: "/other-patches/char-?.png" },
+    { id: "char-exclamation", image: "/other-patches/char-exclamation.png" },
+    { id: "char-question", image: "/other-patches/char-question.png" },
   ];
 
   const [patchQuantities, setPatchQuantities] = useState<

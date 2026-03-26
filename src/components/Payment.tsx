@@ -95,81 +95,11 @@ const Payment: React.FC = () => {
     );
   };
 
-  const getPatchDealDiscount = () => {
-    const count = getTotalPatchCount();
-    if (count === 2) return 2; // 24 -> 22
-    if (count === 3) return 6; // 36 -> 30
-    return 0;
-  };
-
-  const getBundleDealDiscount = () => {
-    const selectedItems = getActiveSelectedItems();
-    const byType: Partial<Record<SelectedItem["type"], SelectedItem>> = {};
-    for (const item of selectedItems) byType[item.type] = item;
-
-    const shirt = byType.shirt;
-    const cap = byType.cap;
-    const passport = byType.passport_case;
-    const lanyard = byType.lanyard;
-
-    const candidates: Array<{ name: string; discount: number }> = [];
-
-    if (cap && lanyard) {
-      const base = getItemBasePrice(cap) + getItemBasePrice(lanyard);
-      candidates.push({
-        name: "STARTER PACK",
-        discount: Math.max(0, base - 138),
-      });
-    }
-
-    if (passport && lanyard) {
-      const base = getItemBasePrice(passport) + getItemBasePrice(lanyard);
-      candidates.push({
-        name: "TRAVEL BUDDY PACK",
-        discount: Math.max(0, base - 148),
-      });
-    }
-
-    if (shirt && cap) {
-      const shirtType = getShirtType(shirt.color || "");
-      const base = getItemBasePrice(shirt) + getItemBasePrice(cap);
-      candidates.push({
-        name: "DAILY FIT PACK",
-        discount: Math.max(0, base - (shirtType === "ringtee" ? 193 : 184)),
-      });
-    }
-
-    if (shirt && passport) {
-      const shirtType = getShirtType(shirt.color || "");
-      const base = getItemBasePrice(shirt) + getItemBasePrice(passport);
-      candidates.push({
-        name: "TAKEOFF PACK",
-        discount: Math.max(0, base - (shirtType === "ringtee" ? 203 : 194)),
-      });
-    }
-
-    if (shirt && lanyard) {
-      const shirtType = getShirtType(shirt.color || "");
-      const base = getItemBasePrice(shirt) + getItemBasePrice(lanyard);
-      candidates.push({
-        name: "MAIN CHARACTER PACK",
-        discount: Math.max(0, base - (shirtType === "ringtee" ? 256 : 248)),
-      });
-    }
-
-    if (candidates.length === 0) return null;
-    return candidates.reduce((best, curr) =>
-      curr.discount > best.discount ? curr : best
-    );
-  };
-
   // Calculate total price
   const calculateTotal = () => {
     const details = getOrderDetails();
     const subtotal = details.reduce((sum, item) => sum + item.price, 0);
-    const bundleDiscount = getBundleDealDiscount()?.discount ?? 0;
-    const patchDealDiscount = getPatchDealDiscount();
-    return subtotal - bundleDiscount - patchDealDiscount;
+    return subtotal;
   };
 
   // Format order summary (for API)
@@ -411,7 +341,7 @@ const Payment: React.FC = () => {
       {/* Header */}
       <div className="payment-header">
         <div className="payment-title">PAYMENT HERE</div>
-        <div className="payment-account">BCA 7772760003 Olivia Christy Gunawan</div>
+        <div className="payment-account">BCA 7773317757 Olivia Christy Gunawan</div>
         <div className="payment-note">NOTE TRANSFER: NAME_QUABUDZ</div>
       </div>
 
@@ -428,22 +358,6 @@ const Payment: React.FC = () => {
               </div>
             ))}
 
-            {(() => {
-              const bundleDeal = getBundleDealDiscount();
-              return bundleDeal && bundleDeal.discount > 0 ? (
-                <div className="payment-details-item payment-details-discount">
-                  <span className="payment-details-name">{bundleDeal.name}</span>
-                  <span className="payment-details-price">-{bundleDeal.discount}K</span>
-                </div>
-              ) : null;
-            })()}
-
-            {getPatchDealDiscount() > 0 && (
-              <div className="payment-details-item payment-details-discount">
-                <span className="payment-details-name">PATCH DEAL</span>
-                <span className="payment-details-price">-{getPatchDealDiscount()}K</span>
-              </div>
-            )}
           </div>
           <div className="payment-details-divider"></div>
           <div className="payment-details-total">
